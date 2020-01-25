@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/raymonstah/grapeful/build/pipeline/internal/awsutils"
-	"github.com/urfave/cli/v2"
 	"log"
 	"os"
+
+	"github.com/raymonstah/aws-pipeline/internal/awsutils"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -14,8 +15,8 @@ func main() {
 	app.HideVersion = true
 
 	app.Commands = []*cli.Command{
-		awsutils.LambdaCommand(),
-		awsutils.CloudformationCommand(),
+		awsutils.LambdaCommand,
+		awsutils.CloudformationCommand,
 	}
 	err := app.Run(os.Args)
 	if err != nil {
