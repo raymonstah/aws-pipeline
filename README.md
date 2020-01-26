@@ -23,7 +23,7 @@ GLOBAL OPTIONS:
 
 
 ### Lambdas
-The tool assumes that there are zip files in the specified directory and will upload them a given s3 bucket. If the s3 bucket does not exist, it will create a versioned S3 bucket. The bucket must be versioned to keep track of Lambdas.
+The tool assumes that there are zip files in the specified directory and will upload them a given s3 bucket. If the s3 bucket does not exist, it will create a versioned S3 bucket. The bucket **must** be versioned to keep track of Lambdas.
 ```bash
 go run main.go lambda help
 NAME:
@@ -48,7 +48,7 @@ go run main.go lambda --target-path /example-diretory --bucket nameOfBucket
 The tool will parse a given cloudformation template, and pass any necessary parameters to Cloudformation.
 
 It's responsible for creating or updating a given stack.
-```bash
+```
 go run main.go cloudformation help
 NAME:
    main cloudformation - deploy cloudformation stack
@@ -73,6 +73,7 @@ Parameters:
   # The name of the bucket where all the lambdas are, if any.. this gets injected from the pipeline tool
   LambdasBucket:
     Type: String
+  # Create a parameter for every lambda like so below. The pipeline tool will inject the version into this parameter so that it can be used when defining the `S3ObjectVersion`  
   SampleFunctionZip:
     Type: String
 
@@ -83,6 +84,7 @@ Resources:
       Code:
         S3Bucket: !Ref LambdasBucket
         S3Key: "sample-function.zip"
+        # The version of the lambda that gets injected by the pipeline tool
         S3ObjectVersion: !Ref SampleFunctionZip
 
 ```
