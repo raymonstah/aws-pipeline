@@ -3,23 +3,24 @@ package awsutils
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"io/ioutil"
-	"os"
-	"strings"
 )
 
-// UploadLambdas find any zip files in the given dir and upload them to the lambdaBucket
-func UploadLambdas(ctx context.Context, s3API s3iface.S3API, dir string, lambdaBucket string) error {
+// UploadLambdas find any zip files in the given dir and upload them to the lambdasBucket
+func UploadLambdas(ctx context.Context, s3API s3iface.S3API, dir string, lambdasBucket string) error {
 	fileInfos, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("unable to read target directory: %v: %w", dir, err)
 	}
 
-	err = createBucketIfNotExists(ctx, s3API, lambdaBucket)
+	err = createBucketIfNotExists(ctx, s3API, lambdasBucket)
 	if err != nil {
 		return fmt.Errorf("unable to create bucket: %w", err)
 	}
@@ -33,18 +34,18 @@ func UploadLambdas(ctx context.Context, s3API s3iface.S3API, dir string, lambdaB
 				return fmt.Errorf("unable to open file %v: %w", fInfo.Name(), err)
 			}
 			key := fInfo.Name()
-			fmt.Printf("uploading to s3://%v/%v\n", lambdaBucket, key)
+			fmt.Printf("uploading to s3://%v/%v\n", lambdasBucket, key)
 			output, err := s3API.PutObjectWithContext(ctx, &s3.PutObjectInput{
-				Bucket: aws.String(lambdaBucket),
+				Bucket: aws.String(lambdasBucket),
 				Key:    aws.String(key),
 				Body:   f,
 			})
 			if err != nil {
-				return fmt.Errorf("unable to upload file to s3://%v/%v: %w", lambdaBucket, key, err)
+				return fmt.Errorf("unable to upload file to s3://%v/%v: %w", lambdasBucket, key, err)
 			}
 
 			if output.VersionId == nil {
-				return fmt.Errorf("lambdaBucket %v must support versioning", lambdaBucket)
+				return fmt.Errorf("lambdasBucket %v must support versioning", lambdasBucket)
 			}
 		}
 	}

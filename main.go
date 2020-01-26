@@ -10,7 +10,7 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Usage = "deploy app to AWS"
+	app.Usage = "a deployment tool for AWS"
 	app.EnableBashCompletion = true
 	app.HideVersion = true
 

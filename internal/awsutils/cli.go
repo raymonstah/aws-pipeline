@@ -68,7 +68,7 @@ var CloudformationCommand *cli.Command = &cli.Command{
 			cfAPI = cloudformation.New(s)
 		)
 
-		err := CreateOrUpdateCloudformationStack(ctx, c.String("lambdas-bucket"), c.String("path"), c.String("stack-name"), cfAPI, s3API)
+		err := createOrUpdateCloudformationStack(ctx, c.String("lambdas-bucket"), c.String("path"), c.String("stack-name"), cfAPI, s3API)
 		if err != nil {
 			return fmt.Errorf("unable to create or update cloudformation stack: %w", err)
 		}

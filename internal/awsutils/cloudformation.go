@@ -4,6 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"regexp"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -12,14 +18,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"regexp"
-	"sort"
-	"strings"
-	"time"
 )
 
-func CreateOrUpdateCloudformationStack(ctx context.Context, lambdasBucket, pathToTemplate, stackname string, cfAPI cloudformationiface.CloudFormationAPI, s3API s3iface.S3API) error {
+func createOrUpdateCloudformationStack(ctx context.Context, lambdasBucket, pathToTemplate, stackname string, cfAPI cloudformationiface.CloudFormationAPI, s3API s3iface.S3API) error {
 	bytes, err := ioutil.ReadFile(pathToTemplate)
 	if err != nil {
 		return fmt.Errorf("error reading file %v: %w", pathToTemplate, err)
@@ -204,7 +205,7 @@ func makeParams(templateBody string, versions []*s3.ObjectVersion, lambdasBucket
 	}
 	for _, key := range keys {
 		switch key {
-		case "LambdaBucket":
+		case "LambdasBucket":
 			parameters = appendParameter(parameters, key, lambdasBucket)
 		default:
 			// if nothing matched so far, assume the parameter is for lambda
