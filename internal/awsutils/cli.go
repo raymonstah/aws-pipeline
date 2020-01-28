@@ -32,7 +32,7 @@ var LambdaCommand *cli.Command = &cli.Command{
 			s3API = s3.New(s)
 		)
 
-		if err := UploadLambdas(ctx, s3API, c.String("target-path"), c.String("lambdas-bucket")); err != nil {
+		if err := UploadLambdas(ctx, s3API, c.String("target-path"), c.String("bucket")); err != nil {
 			return fmt.Errorf("unable to upload lambdas: %w", err)
 		}
 

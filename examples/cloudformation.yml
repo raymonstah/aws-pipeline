@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  # The name of the bucket where all the lambdas are, if any.. this gets injected from the pipeline tool
+  LambdasBucket:
+    Type: String
+  # Create a parameter for every lambda like so below. The pipeline tool will inject the version into this parameter so that it can be used when defining the `S3ObjectVersion`  
+  SampleFunctionZip:
+    Type: String
+
+Resources:
+  SampleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: "sample-function"
+      Runtime: go1.x
+      CodeUri:
+        Bucket: !Ref LambdasBucket
+        Key: sample-function.zip
+        Version: !Ref SampleFunctionZip
+
+  

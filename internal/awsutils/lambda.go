@@ -25,9 +25,9 @@ func UploadLambdas(ctx context.Context, s3API s3iface.S3API, dir string, lambdas
 		return fmt.Errorf("unable to create bucket: %w", err)
 	}
 
+	// upload zip files to bucket
 	for _, fInfo := range fileInfos {
 		if strings.HasSuffix(fInfo.Name(), "zip") {
-			// ok
 			f, err := os.Open(dir + fInfo.Name())
 			defer f.Close()
 			if err != nil {

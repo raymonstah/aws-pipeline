@@ -2,6 +2,7 @@
 * A tool to help deploy lambdas to AWS
 
 ## Getting started:
+The tool assumes that you have AWS credentials in your environment.
 
 
 ```
@@ -24,7 +25,7 @@ GLOBAL OPTIONS:
 
 ### Lambdas
 The tool assumes that there are zip files in the specified directory and will upload them a given s3 bucket. If the s3 bucket does not exist, it will create a versioned S3 bucket. The bucket **must** be versioned to keep track of Lambdas.
-```bash
+```
 go run main.go lambda help
 NAME:
    main lambda - upload zipped lambdas from a path to s3
@@ -40,7 +41,7 @@ OPTIONS:
 
 Example:
 ```
-go run main.go lambda --target-path /example-diretory --bucket nameOfBucket
+go run main.go lambda --bucket samplebucketxyz --target-path examples/
 ```
 
 
@@ -90,5 +91,5 @@ Resources:
 ```
 Example:
 ```
-go run main.go cloudformation --path cloudformation.yml --stack-name sample-stack --lambdas-bucket lamda-bucket-here
+go run main.go cloudformation --path examples/cloudformation.yml --stack-name sample-stack --lambdas-bucket samplebucketxyz
 ```
