@@ -13,7 +13,10 @@ type Handler struct {
 
 // Handle an event
 func (h *Handler) Handle(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	return events.APIGatewayProxyResponse{}, nil
+	return events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Body:       "hello from from APIGateway",
+	}, nil
 }
 
 func main() {
@@ -21,7 +24,8 @@ func main() {
 	lambda.Start(handler.Handle)
 }
 
-// To build zip file:
-
-//rho:examples rho$ GOOS=linux go build -o sample-function sample-function.go
-// rho:examples rho$ zip sample-function.zip sample-function
+/**
+To build zip file:
+GOOS=linux go build -o sample-function sample-function.go
+zip sample-function.zip sample-function
+**/

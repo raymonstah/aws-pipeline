@@ -20,4 +20,10 @@ Resources:
         Key: sample-function.zip
         Version: !Ref SampleFunctionZip
 
-  
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: Sample HTTP thing
+      ProtocolType: HTTP
+      Target: !GetAtt SampleFunction.Arn
+

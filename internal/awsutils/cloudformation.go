@@ -35,47 +35,65 @@ func createOrUpdateCloudformationStack(ctx context.Context, lambdasBucket, pathT
 		fmt.Printf("zipped lambda found: %v, version %v\n", *version.Key, *version.VersionId)
 	}
 
-	parameters, err := makeParams(string(bytes), versions, lambdasBucket)
+	template := string(bytes)
+
+	parameters, err := makeParams(template, versions, lambdasBucket)
 	_, err = cfAPI.DescribeStacksWithContext(ctx, &cloudformation.DescribeStacksInput{
 		StackName: aws.String(stackname)},
 	)
 	if err != nil {
 		var awsErr awserr.Error
 		if ok := errors.As(err, &awsErr); ok && awsErr.Code() == "ValidationError" {
-			_, err = cfAPI.CreateStackWithContext(ctx, &cloudformation.CreateStackInput{
-				Capabilities: []*string{
-					aws.String(cloudformation.CapabilityCapabilityNamedIam),
-					aws.String(cloudformation.CapabilityCapabilityAutoExpand),
-				},
-				Parameters:   parameters,
-				StackName:    aws.String(stackname),
-				TemplateBody: aws.String(string(bytes)),
-			})
-			if err != nil {
-				return fmt.Errorf("unable to create stack %v: %w", stackname, err)
+			if err := createStack(ctx, stackname, template, cfAPI, s3API, parameters); err != nil {
+				return fmt.Errorf("unable to create stack: %w", err)
 			}
-			fmt.Printf("created stack %v\n", stackname)
-			go printEvents(ctx, cfAPI, stackname)
-			err := cfAPI.WaitUntilStackCreateCompleteWithContext(ctx, &cloudformation.DescribeStacksInput{
-				StackName: aws.String(stackname),
-			})
-			if err != nil {
-				return fmt.Errorf("unable to wait until stack create complete: %w", err)
-			}
-			return nil
-
 		}
 		return fmt.Errorf("unable to describe stack %v: %w", stackname, err)
 	}
 
-	_, err = cfAPI.UpdateStackWithContext(ctx, &cloudformation.UpdateStackInput{
+	if err := updateStack(ctx, stackname, template, cfAPI, s3API, parameters); err != nil {
+		return fmt.Errorf("unable to update stack: %w", err)
+	}
+
+	return nil
+}
+
+// createStack, print events until complete or error out
+func createStack(ctx context.Context, stackname string, template string, cfAPI cloudformationiface.CloudFormationAPI, s3API s3iface.S3API, parameters []*cloudformation.Parameter) error {
+	_, err := cfAPI.CreateStackWithContext(ctx, &cloudformation.CreateStackInput{
 		Capabilities: []*string{
 			aws.String(cloudformation.CapabilityCapabilityNamedIam),
 			aws.String(cloudformation.CapabilityCapabilityAutoExpand),
 		},
 		Parameters:   parameters,
 		StackName:    aws.String(stackname),
-		TemplateBody: aws.String(string(bytes)),
+		TemplateBody: aws.String(template),
+	})
+	if err != nil {
+		return fmt.Errorf("unable to create stack %v: %w", stackname, err)
+	}
+	fmt.Printf("created stack %v\n", stackname)
+	go printEvents(ctx, cfAPI, stackname)
+	err = cfAPI.WaitUntilStackCreateCompleteWithContext(ctx, &cloudformation.DescribeStacksInput{
+		StackName: aws.String(stackname),
+	})
+	if err != nil {
+		return fmt.Errorf("unable to wait until stack create complete: %w", err)
+	}
+	return nil
+}
+
+// updateStack, print events until complete, or error out
+func updateStack(ctx context.Context, stackname string, template string, cfAPI cloudformationiface.CloudFormationAPI, s3API s3iface.S3API, parameters []*cloudformation.Parameter) error {
+
+	_, err := cfAPI.UpdateStackWithContext(ctx, &cloudformation.UpdateStackInput{
+		Capabilities: []*string{
+			aws.String(cloudformation.CapabilityCapabilityNamedIam),
+			aws.String(cloudformation.CapabilityCapabilityAutoExpand),
+		},
+		Parameters:   parameters,
+		StackName:    aws.String(stackname),
+		TemplateBody: aws.String(template),
 	})
 	if err != nil {
 		var awsErr awserr.Error
@@ -208,7 +226,7 @@ func makeParams(templateBody string, versions []*s3.ObjectVersion, lambdasBucket
 		case "LambdasBucket":
 			parameters = appendParameter(parameters, key, lambdasBucket)
 		default:
-			// if nothing matched so far, assume the parameter is for lambda
+			// if nothing matched so far, assume the parameter is for lambda versions
 			for _, v := range versions {
 				// strip symbols
 				reg, err := regexp.Compile("[^a-zA-Z0-9]+")
